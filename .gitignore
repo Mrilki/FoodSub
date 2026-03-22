@@ -1,0 +1,44 @@
+# Go
+go.sum
+/vendor/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+
+# Java
+*.class
+*.jar
+*.war
+target/
+.idea/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local configs
+*.local.yaml
+.env
+configs/config.local.yaml
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
