@@ -1,0 +1,110 @@
+package service
+
+import (
+	"context"
+
+	"github.com/Mrilki/catalog-service/internal/model"
+	"github.com/Mrilki/catalog-service/internal/repository"
+	"github.com/Mrilki/catalog-service/pkg/logger"
+	"go.uber.org/zap"
+)
+
+type MenuService interface {
+	GetAll(ctx context.Context) ([]*model.MenuItem, error)
+	GetByID(ctx context.Context, id string) (*model.MenuItem, error)
+	Create(ctx context.Context, menu *model.MenuItem) error
+	Update(ctx context.Context, menu *model.MenuItem) error
+	Delete(ctx context.Context, id string) error
+	SearchByTags(ctx context.Context, tags []string) ([]*model.MenuItem, error)
+}
+
+type menuService struct {
+	repo repository.MenuRepository
+	log  *logger.Logger
+}
+
+func NewMenuService(repo repository.MenuRepository, log *logger.Logger) MenuService {
+	return &menuService{
+		repo: repo,
+		log:  log,
+	}
+}
+
+func (s *menuService) GetAll(ctx context.Context) ([]*model.MenuItem, error) {
+	s.log.Debug("Getting all menus")
+	menus, err := s.repo.GetAll(ctx)
+	if err != nil {
+		s.log.Error("Failed to get menus from repository", zap.Error(err))
+		return nil, err
+	}
+	return menus, nil
+}
+
+func (s *menuService) GetByID(ctx context.Context, id string) (*model.MenuItem, error) {
+	s.log.Debug("Getting menu by ID", zap.String("id", id))
+	menu, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		s.log.Warn("Menu not found", zap.String("id", id), zap.Error(err))
+		return nil, err
+	}
+	return menu, nil
+}
+
+func (s *menuService) Create(ctx context.Context, menu *model.MenuItem) error {
+	s.log.Info("Creating new menu", zap.String("name", menu.Name))
+
+	if menu.Name == "" {
+		return &ValidationError{Field: "name", Message: "name is required"}
+	}
+	if menu.Category == "" {
+		return &ValidationError{Field: "category", Message: "category is required"}
+	}
+
+	if err := s.repo.Create(ctx, menu); err != nil {
+		s.log.Error("Failed to create menu in repository", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
+func (s *menuService) Update(ctx context.Context, menu *model.MenuItem) error {
+	s.log.Info("Updating menu", zap.String("id", menu.ID.Hex()))
+
+	if err := s.repo.Update(ctx, menu); err != nil {
+		s.log.Error("Failed to update menu in repository", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
+func (s *menuService) Delete(ctx context.Context, id string) error {
+	s.log.Info("Deleting menu", zap.String("id", id))
+
+	if err := s.repo.Delete(ctx, id); err != nil {
+		s.log.Error("Failed to delete menu in repository", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
+func (s *menuService) SearchByTags(ctx context.Context, tags []string) ([]*model.MenuItem, error) {
+	s.log.Debug("Searching menus by tags", zap.Strings("tags", tags))
+	menus, err := s.repo.SearchByTags(ctx, tags)
+	if err != nil {
+		s.log.Error("Failed to search menus", zap.Error(err))
+		return nil, err
+	}
+	return menus, nil
+}
+
+type ValidationError struct {
+	Field   string
+	Message string
+}
+
+func (e *ValidationError) Error() string {
+	return e.Field + ": " + e.Message
+}

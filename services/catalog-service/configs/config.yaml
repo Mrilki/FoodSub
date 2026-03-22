@@ -1,0 +1,23 @@
+server:
+  port: 8083
+  mode: debug
+
+mongodb:
+  uri: mongodb://localhost:27017
+  database: catalog_db
+
+redis:
+  addr: localhost:6379
+  password: ""
+  cache_ttl: 1h
+
+kafka:
+  brokers:
+    - localhost:9092
+  consumer_group: catalog-service
+  topics:
+    - order.events
+
+logging:
+  level: info
+  format: json
