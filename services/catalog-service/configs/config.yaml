@@ -9,14 +9,36 @@ mongodb:
 redis:
   addr: localhost:6379
   password: ""
-  cache_ttl: 1h
+  cache_ttl: 3600
+
+rate_limit:
+  requests: 100
+  window: 60
+  admin_requests: 50
+  admin_window: 60
 
 kafka:
-  brokers:
-    - localhost:9092
+  brokers: localhost:9092
   consumer_group: catalog-service
-  topics:
+  consumer_topics:
     - order.events
+  producer_topics:
+    - menu.events
+
+jwt:
+  public_key_url: http://auth-service:8081/api/v1/auth/public-key
+  cache_ttl: 3600
+
+observability:
+  prometheus_port: 9091
+  jaeger_endpoint: http://jaeger:14268/api/traces
+  service_name: catalog-service
+
+minio:
+  endpoint: minio:9000
+  access_key: minioadmin
+  secret_key: minioadmin
+  bucket: catalog-archives
 
 logging:
   level: info

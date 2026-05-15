@@ -1,0 +1,103 @@
+adminUser: admin
+adminPassword: admin
+
+replicas: 2
+
+persistence:
+  enabled: true
+  size: 10Gi
+  accessModes:
+    - ReadWriteOnce
+
+resources:
+  requests:
+    memory: 256Mi
+    cpu: 100m
+  limits:
+    memory: 1Gi
+    cpu: 500m
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    deleteDatasources: []
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        uid: prometheus
+        url: http://prometheus-operated:9090
+        access: proxy
+        isDefault: true
+        editable: true
+        jsonData:
+          timeInterval: "15s"
+          queryTimeout: "60s"
+          httpMethod: "POST"
+
+      - name: Jaeger
+        type: jaeger
+        uid: jaeger
+        url: http://food-subscription-query:16686
+        access: proxy
+        editable: true
+
+      - name: Loki
+        type: loki
+        uid: loki
+        url: http://loki-gateway:80
+        access: proxy
+        editable: true
+        jsonData:
+          maxLines: 1000
+          derivedFields:
+            - datasourceUid: jaeger
+              matcherRegex: '"trace_id":"(\w+)"'
+              name: TraceID
+              url: "$${__value.raw}"
+
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards
+
+dashboards:
+  default:
+    kubernetes-cluster:
+      gnetId: 6417
+      revision: 1
+      datasource: Prometheus
+    microservices-overview:
+      gnetId: 10280
+      revision: 1
+      datasource: Prometheus
+    kafka-monitoring:
+      gnetId: 7589
+      revision: 1
+      datasource: Prometheus
+    jaeger-tracing:
+      gnetId: 11679
+      revision: 1
+      datasource: Jaeger
+    loki-logs:
+      gnetId: 13407
+      revision: 1
+      datasource: Loki
+
+alerting:
+  enabled: true
+  contactpoints:
+    - orgId: 1
+      name: default-receiver
+      receivers:
+        - uid: default-receiver
+          type: email
+          settings:
+            addresses: team@food-subscription.local

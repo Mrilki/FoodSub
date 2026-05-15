@@ -1,0 +1,19 @@
+apiVersion: v2
+name: catalog-service
+description: Food Subscription Catalog Service (Go)
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - food
+  - subscription
+  - catalog
+  - go
+maintainers:
+  - name: Mrilki
+    email: Mrilki@gmail.com
+icon: https://example.com/icon.png
+home: https://github.com/Mrilki/FoodSub
+sources:
+  - https://github.com/Mrilki/FoodSub
+dependencies: []

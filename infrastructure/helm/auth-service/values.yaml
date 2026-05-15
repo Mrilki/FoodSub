@@ -1,0 +1,120 @@
+replicaCount: 3
+
+image:
+  repository: ghcr.io/mrilki/auth-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations:
+  sidecar.istio.io/inject: "true"
+  instrumentation.opentelemetry.io/inject-java: "true"
+
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+
+service:
+  type: ClusterIP
+  port: 8081
+  annotations: {}
+
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: food-subscription.local
+      paths:
+        - path: /api/v1/auth
+          pathType: Prefix
+        - path: /api/v1/users
+          pathType: Prefix
+  tls:
+    - secretName: food-subscription-tls
+      hosts:
+        - food-subscription.local
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 15
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+config:
+  serverPort: "8081"
+  springProfilesActive: "docker"
+  loggingLevel: "INFO"
+
+
+  database:
+    url: "jdbc:postgresql://postgres-auth:5432/auth_db"
+    username: ""
+    password: ""
+
+  jwt:
+    privateKeyPath: "/keys/private.pem"
+    publicKeyPath: "/keys/public.pem"
+    accessTokenTtl: "15m"
+    refreshTokenTtl: "30d"
+
+  kafka:
+    brokers: "kafka:9092"
+    topics:
+      userEvents: "user.events"
+
+healthcheck:
+  liveness:
+    path: /actuator/health/liveness
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readiness:
+    path: /actuator/health/readiness
+    initialDelaySeconds: 30
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+secrets:
+  create: true
+  databaseUrl: ""
+  databaseUsername: "user"
+  databasePassword: "123"
+  jwtPrivateKey: "/keys/private.pem"
+  jwtPublicKey: "/keys/public.pem"
+  kafkaBrokers: "kafka:9092"

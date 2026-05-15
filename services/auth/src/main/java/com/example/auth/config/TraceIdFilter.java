@@ -23,22 +23,18 @@ public class TraceIdFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         try {
-            // Берем trace_id из заголовка или генерируем новый
             String traceId = request.getHeader("X-Trace-Id");
             if (traceId == null || traceId.isEmpty()) {
                 traceId = UUID.randomUUID().toString();
             }
 
-            // Кладем в MDC (контекст лога для этого потока)
             MDC.put(TRACE_ID, traceId);
 
-            // Добавляем в ответ, чтобы клиент мог видеть его
             response.setHeader("X-Trace-Id", traceId);
 
             filterChain.doFilter(request, response);
 
         } finally {
-            // Обязательно чистим MDC после запроса!
             MDC.clear();
         }
     }

@@ -16,7 +16,7 @@ public class AdminUserResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // Вложенный профиль (не возвращаем Entity!)
+
     private UserProfileDTO profile;
 
     @Data

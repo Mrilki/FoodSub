@@ -15,7 +15,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/admin/users")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')") // 🔐 Весь контроллер только для админов
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminUserController {
 
     private final AdminService adminService;

@@ -24,7 +24,7 @@ func ConnectMongoDB(uri string, database string) (*mongo.Client, error) {
 		return nil, fmt.Errorf("failed to ping MongoDB: %w", err)
 	}
 
-	fmt.Printf("✅ MongoDB connected successfully (database: %s)\n", database)
+	fmt.Printf("MongoDB connected successfully (database: %s)\n", database)
 	return client, nil
 }
 

@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger-operator
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: jaeger-operator
+  template:
+    metadata:
+      labels:
+        name: jaeger-operator
+    spec:
+      containers:
+        - name: jaeger-operator
+          image: jaegertracing/jaeger-operator:1.50.0
+          args: ["start"]
+          env:
+            - name: WATCH_NAMESPACE
+              value: ""
+---
+apiVersion: jaegertracing.io/v1
+kind: Jaeger
+metadata:
+  name: food-subscription
+  namespace: monitoring
+spec:
+  strategy: production
+  collector:
+    replicas: 2
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 250m
+      limits:
+        memory: 1Gi
+        cpu: 500m
+    options:
+      kafka:
+        producer:
+          brokers:
+            - kafka.kafka.svc.cluster.local:9092
+  query:
+    replicas: 2
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 100m
+      limits:
+        memory: 512Mi
+        cpu: 250m
+  storage:
+    type: elasticsearch
+    options:
+      es:
+        server-urls: http://elasticsearch:9200
+        index-prefix: jaeger
+  sampling:
+    options:
+      default_strategy:
+        type: probabilistic
+        param: 0.1

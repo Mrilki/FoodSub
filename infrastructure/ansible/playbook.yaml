@@ -1,0 +1,28 @@
+---
+- name: Deploy Food Subscription Infrastructure
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    kubernetes_context: "k3s-default"
+
+  pre_tasks:
+    - name: Set kubectl context
+      command: kubectl config use-context {{ kubernetes_context }}
+      tags: [always]
+
+  roles:
+    - role: kafka
+      tags: [kafka]
+
+  post_tasks:
+    - name: Verify Kafka is running
+      command: kubectl get kafka -n kafka
+      register: kafka_status
+      tags: [verify]
+
+    - name: Display Kafka status
+      debug:
+        var: kafka_status.stdout
+      tags: [verify]

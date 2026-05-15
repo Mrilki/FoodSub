@@ -1,0 +1,46 @@
+test_name: "Food Subscription Load Test"
+target_host: "http://localhost:8083"
+
+scenarios:
+  light:
+    users: 10
+    spawn_rate: 2
+    run_time: 5m
+    description: "Лёгкая нагрузка (10 пользователей)"
+
+  medium:
+    users: 50
+    spawn_rate: 5
+    run_time: 10m
+    description: "Средняя нагрузка (50 пользователей)"
+
+  heavy:
+    users: 100
+    spawn_rate: 10
+    run_time: 15m
+    description: "Тяжёлая нагрузка (100 пользователей)"
+
+  stress:
+    users: 500
+    spawn_rate: 50
+    run_time: 20m
+    description: "Стресс тест (500 пользователей)"
+
+thresholds:
+  - name: "GET /menu"
+    max_response_time: 200ms
+    failure_rate: < 1%
+
+  - name: "POST /admin/menu"
+    max_response_time: 500ms
+    failure_rate: < 1%
+
+  - name: "GET /health"
+    max_response_time: 50ms
+    failure_rate: 0%
+
+expected_metrics:
+  requests_per_second: 100
+  p95_latency: 300ms
+  p99_latency: 500ms
+  error_rate: < 0.1%

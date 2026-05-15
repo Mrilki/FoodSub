@@ -1,0 +1,18 @@
+apiVersion: v2
+name: auth-service
+description: Food Subscription Auth Service (Java + Spring Boot)
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - food
+  - subscription
+  - auth
+  - java
+  - spring-boot
+maintainers:
+  - name: Mrilki
+    email: Mrilki@gmail.com
+home: https://github.com/Mrilki/FoodSub
+sources:
+  - https://github.com/Mrilki/FoodSub/tree/main/services/auth

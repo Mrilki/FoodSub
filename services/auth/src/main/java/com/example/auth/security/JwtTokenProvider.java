@@ -30,10 +30,8 @@ public class JwtTokenProvider {
         this.refreshExpiration = refreshExpiration;
     }
 
-    // Генерация Access токена
     public String generateAccessToken(Authentication authentication) {
         Map<String, Object> claims = new HashMap<>();
-        // Добавляем роли в токены
         claims.put("roles", authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList()));
@@ -42,7 +40,6 @@ public class JwtTokenProvider {
         return createToken(subject, claims, accessExpiration);
     }
 
-    // Генерация Refresh токена
     public String generateRefreshToken(Authentication authentication) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         String subject = userDetails.getIdAsString();
@@ -52,14 +49,13 @@ public class JwtTokenProvider {
     private String createToken(String subject, Map<String, Object> claims, long expiration) {
         return Jwts.builder()
                 .claims(claims)
-                .subject(subject) // Здесь будем хранить UUID пользователя
+                .subject(subject)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(secretKey)
                 .compact();
     }
 
-    // Валидация токена
     public boolean validateToken(String token) {
         try {
             Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
@@ -69,7 +65,6 @@ public class JwtTokenProvider {
         }
     }
 
-    // Получение UUID пользователя из токена
     public String getUserIdFromToken(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(secretKey)

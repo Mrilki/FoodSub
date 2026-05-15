@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Mrilki/catalog-service/internal/kafka"
 	"github.com/Mrilki/catalog-service/internal/model"
 	"github.com/Mrilki/catalog-service/internal/service"
 	"github.com/Mrilki/catalog-service/pkg/logger"
@@ -13,18 +14,23 @@ import (
 )
 
 type MenuHandler struct {
-	service service.MenuService
-	log     *logger.Logger
+	service  service.MenuService
+	producer kafka.KafkaProducer
+	log      *logger.Logger
 }
 
-func NewMenuHandler(service service.MenuService, log *logger.Logger) *MenuHandler {
+func NewMenuHandler(
+	service service.MenuService,
+	producer kafka.KafkaProducer,
+	log *logger.Logger,
+) *MenuHandler {
 	return &MenuHandler{
-		service: service,
-		log:     log,
+		service:  service,
+		producer: producer,
+		log:      log,
 	}
 }
 
-// GET /api/v1/menu
 func (h *MenuHandler) GetAllMenus(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -38,7 +44,6 @@ func (h *MenuHandler) GetAllMenus(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": menus})
 }
 
-// GET /api/v1/menu/:id
 func (h *MenuHandler) GetMenuByID(c *gin.Context) {
 	id := c.Param("id")
 
@@ -58,7 +63,6 @@ func (h *MenuHandler) GetMenuByID(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": menu})
 }
 
-// api/v1/admin/menu
 func (h *MenuHandler) CreateMenu(c *gin.Context) {
 	var menu model.MenuItem
 
@@ -82,11 +86,21 @@ func (h *MenuHandler) CreateMenu(c *gin.Context) {
 		return
 	}
 
+	if h.producer != nil {
+		if err := h.producer.SendMenuCreated(
+			menu.ID.Hex(),
+			menu.Name,
+			menu.Category,
+		); err != nil {
+			h.log.Warn("Failed to send Kafka event", zap.Error(err))
+			// Не прерываем запрос, событие опционально
+		}
+	}
+
 	h.log.Info("Menu created", zap.String("id", menu.ID.Hex()))
 	c.JSON(http.StatusCreated, gin.H{"data": menu})
 }
 
-// PUT /api/v1/admin/menu/:id
 func (h *MenuHandler) UpdateMenu(c *gin.Context) {
 	id := c.Param("id")
 
@@ -110,11 +124,13 @@ func (h *MenuHandler) UpdateMenu(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update menu"})
 		return
 	}
+	if h.producer != nil {
+		h.producer.SendMenuUpdated(menu.ID.Hex(), menu.Name)
+	}
 
 	c.JSON(http.StatusOK, gin.H{"data": menu})
 }
 
-// DeleteMenu DELETE /api/v1/admin/menu/:id
 func (h *MenuHandler) DeleteMenu(c *gin.Context) {
 	id := c.Param("id")
 
@@ -129,11 +145,13 @@ func (h *MenuHandler) DeleteMenu(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete menu"})
 		return
 	}
+	if h.producer != nil {
+		h.producer.SendMenuDeleted(id)
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Menu deleted"})
 }
 
-// SearchMenus — GET /api/v1/menu/search?tags=веган,острое
 func (h *MenuHandler) SearchMenus(c *gin.Context) {
 	tagsParam := c.Query("tags")
 	if tagsParam == "" {

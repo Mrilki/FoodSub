@@ -13,7 +13,6 @@ public class OpenApiConfig {
 
     @Bean
     public OpenAPI customOpenAPI() {
-        // 1. Создаём схему безопасности "Bearer Authentication"
         SecurityScheme securityScheme = new SecurityScheme()
                 .type(SecurityScheme.Type.HTTP)
                 .scheme("bearer")
@@ -21,7 +20,6 @@ public class OpenApiConfig {
                 .in(SecurityScheme.In.HEADER)
                 .name("Authorization");
 
-        // 2. Добавляем требование безопасности для всех эндпоинтов
         SecurityRequirement securityRequirement = new SecurityRequirement().addList("Bearer Authentication");
 
         return new OpenAPI()

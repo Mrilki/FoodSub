@@ -18,7 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // Включает аннотации @PreAuthorize
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -54,10 +54,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
 
-                        // Админка
-//                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-
-                        // Всё остальное защищено
                         .anyRequest().authenticated()
 
                 )

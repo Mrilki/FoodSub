@@ -68,13 +68,12 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
 
-        // Переменные объявлены в этом методе и видны до конца метода
         String accessToken = tokenProvider.generateAccessToken(authentication);
         String refreshToken = tokenProvider.generateRefreshToken(authentication);
 
         saveSession(user, refreshToken);
 
-        sendKafkaEvent("user.created", user); // Передаем только user, accessToken не нужен для события
+        sendKafkaEvent("user.created", user);
 
         log.info("Register attempt: email={}, passwordLength={}",
                 request.getEmail(),
@@ -174,7 +173,6 @@ public class AuthService {
         }
 
         try {
-            // Берём trace_id из MDC
             String traceId = MDC.get("trace_id");
             if (traceId == null) {
                 traceId = UUID.randomUUID().toString();
@@ -186,7 +184,7 @@ public class AuthService {
             payload.put("created_at", user.getCreatedAt());
 
             Map<String, Object> event = new HashMap<>();
-            event.put("trace_id", traceId);  // ✅ Trace ID из MDC
+            event.put("trace_id", traceId);
             event.put("timestamp", LocalDateTime.now());
             event.put("event_type", eventType);
             event.put("payload", payload);
@@ -196,7 +194,6 @@ public class AuthService {
 
         } catch (Exception e) {
             log.warn("Failed to send Kafka event {}: {}", eventType, e.getMessage());
-            // Не прерываем бизнес-логику!
         }
     }
 }

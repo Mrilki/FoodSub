@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: food-subscription
+  labels:
+    istio-injection: enabled
+    monitoring: enabled
+    cilium.io/monitoring: enabled
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kafka
+  labels:
+    strimzi.io/cluster: food-kafka
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    monitoring: enabled

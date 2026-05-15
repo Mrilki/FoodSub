@@ -1,0 +1,106 @@
+prometheus:
+  prometheusSpec:
+    replicas: 2
+    retention: 15d
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 250m
+      limits:
+        memory: 2Gi
+        cpu: 1000m
+    serviceMonitorSelector:
+      matchLabels:
+        release: prometheus
+    podMonitorSelector:
+      matchLabels:
+        release: prometheus
+    ruleSelector:
+      matchLabels:
+        release: prometheus
+    scrapeInterval: 15s
+    evaluationInterval: 15s
+
+alertmanager:
+  enabled: true
+  replicas: 2
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 50m
+    limits:
+      memory: 512Mi
+      cpu: 250m
+
+grafana:
+  enabled: true
+  adminPassword: admin
+  replicas: 2
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 100m
+    limits:
+      memory: 1Gi
+      cpu: 500m
+  sidecar:
+    dashboards:
+      enabled: true
+      searchNamespace: ALL
+    datasources:
+      enabled: true
+      defaultDatasourceEnabled: true
+
+additionalServiceMonitors:
+  - name: catalog-service-monitor
+    selector:
+      matchLabels:
+        app: catalog-service
+        release: prometheus
+    endpoints:
+      - port: http
+        path: /metrics
+        interval: 15s
+        scrapeTimeout: 10s
+    namespaceSelector:
+      matchNames:
+        - food-subscription
+
+  - name: auth-service-monitor
+    selector:
+      matchLabels:
+        app: auth-service
+        release: prometheus
+    endpoints:
+      - port: http
+        path: /actuator/prometheus
+        interval: 15s
+    namespaceSelector:
+      matchNames:
+        - food-subscription
+
+  - name: subscription-service-monitor
+    selector:
+      matchLabels:
+        app: subscription-service
+        release: prometheus
+    endpoints:
+      - port: http
+        path: /metrics
+        interval: 15s
+    namespaceSelector:
+      matchNames:
+        - food-subscription
+
+  - name: kafka-monitor
+    selector:
+      matchLabels:
+        app: kafka
+        release: prometheus
+    endpoints:
+      - port: tcp-prometheus
+        path: /metrics
+        interval: 30s
+    namespaceSelector:
+      matchNames:
+        - kafka

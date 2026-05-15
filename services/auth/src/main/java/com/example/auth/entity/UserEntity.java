@@ -23,38 +23,23 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-//    public UUID getId() {
-//        return this.id;
-//    }
 
     @Column(nullable = false, unique = true)
     private String email;
 
-//    public String getEmail() {
-//        return this.email;
-//    }
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-//    public String getPasswordHash() {
-//        return this.passwordHash;
-//    }
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserRole role;
 
-//    public UserRole getRole() {
-//        return this.role;
-//    }
 
     @Column(name = "is_active", nullable = false)
     private boolean active;
 
-//    public boolean isActive() {
-//        return active;
-//    }
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -64,7 +49,6 @@ public class UserEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Связь 1:1 с профилем
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private UserProfileEntity profile;
 }

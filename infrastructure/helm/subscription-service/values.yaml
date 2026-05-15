@@ -1,0 +1,119 @@
+replicaCount: 3
+
+image:
+  repository: ghcr.io/mrilki/subscription-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations:
+  sidecar.istio.io/inject: "true"
+  instrumentation.opentelemetry.io/inject-python: "true"
+
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+service:
+  type: ClusterIP
+  port: 8082
+  annotations: {}
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: food-subscription.local
+      paths:
+        - path: /api/v1/subscriptions
+          pathType: Prefix
+        - path: /api/v1/orders
+          pathType: Prefix
+  tls:
+    - secretName: food-subscription-tls
+      hosts:
+        - food-subscription.local
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+config:
+  serverPort: "8082"
+  loggingLevel: "INFO"
+
+  database:
+    url: "postgresql://user:pass@postgres-subscription:5432/subscription_db"
+    username: "user"
+    password: "pass"
+
+  kafka:
+    brokers: "kafka:9092"
+    consumerGroup: "subscription-service"
+    topics:
+      orderEvents: "order.events"
+      userEvents: "user.events"
+
+  jwt:
+    publicKeyUrl: "http://auth-service:8081/api/v1/auth/public-key"
+    cacheTTL: 3600
+
+  cron:
+    orderCreation: "0 0 * * *"
+
+healthcheck:
+  liveness:
+    path: /health
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readiness:
+    path: /ready
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+
+secrets:
+  create: true
+  databaseUrl: ""
+  databaseUsername: ""
+  databasePassword: ""
+  jwtPublicKeyUrl: ""
+  kafkaBrokers: ""

@@ -1,0 +1,18 @@
+apiVersion: v2
+name: subscription-service
+description: Food Subscription Service (Python + FastAPI)
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - food
+  - subscription
+  - orders
+  - python
+  - fastapi
+maintainers:
+  - name: Mrilki
+    email: Mrilkil@gmail.com
+home: https://github.com/Mrilki/FoodSub
+sources:
+  - https://github.com/Mrilki/FoodSub/tree/main/services/subscription-service

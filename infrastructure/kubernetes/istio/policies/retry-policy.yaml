@@ -1,0 +1,32 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: retry-policy
+  namespace: food-subscription
+spec:
+  hosts:
+    - auth-service
+    - subscription-service
+    - catalog-service
+  http:
+    - route:
+        - destination:
+            host: auth-service
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream,5xx
+    - route:
+        - destination:
+            host: subscription-service
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream,5xx
+    - route:
+        - destination:
+            host: catalog-service
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream,5xx

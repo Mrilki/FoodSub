@@ -1,0 +1,126 @@
+replicaCount: 3
+
+image:
+  repository: ghcr.io/mrilki/catalog-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations:
+  sidecar.istio.io/inject: "true"
+  instrumentation.opentelemetry.io/inject-go: "true"
+
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+service:
+  type: ClusterIP
+  port: 8083
+  annotations: {}
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: food-subscription.local
+      paths:
+        - path: /api/v1/menu
+          pathType: Prefix
+        - path: /api/v1/admin
+          pathType: Prefix
+  tls:
+    - secretName: food-subscription-tls
+      hosts:
+        - food-subscription.local
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+config:
+  serverPort: "8083"
+  serverMode: "release"
+  loggingLevel: "info"
+  loggingFormat: "json"
+
+  mongodb:
+    uri: "mongodb://mongo:27017"
+    database: "catalog_db"
+
+  redis:
+    addr: "redis:6379"
+    cacheTTL: 3600
+
+  kafka:
+    brokers: "kafka:9092"
+    consumerGroup: "catalog-service"
+    consumerTopics: ["order.events"]
+    producerTopics: ["menu.events"]
+
+  jwt:
+    publicKeyUrl: "http://auth-service:8081/api/v1/auth/public-key"
+    cacheTTL: 3600
+
+  rateLimit:
+    requests: 100
+    window: 60
+    adminRequests: 50
+    adminWindow: 60
+
+healthcheck:
+  liveness:
+    path: /health
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readiness:
+    path: /ready
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+secrets:
+  create: true
+  mongoUri: ""
+  redisAddr: ""
+  kafkaBrokers: ""
+  jwtPublicKeyUrl: ""

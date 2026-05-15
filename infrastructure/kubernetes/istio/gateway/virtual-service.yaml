@@ -1,0 +1,72 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: food-subscription-routing
+  namespace: food-subscription
+spec:
+  hosts:
+    - "food-subscription.local"
+    - "*"
+  gateways:
+    - food-subscription-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /api/v1/auth
+        - uri:
+            prefix: /api/v1/users
+      route:
+        - destination:
+            host: auth-service
+            port:
+              number: 8081
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+        retryOn: gateway-error,connect-failure,refused-stream
+
+    - match:
+        - uri:
+            prefix: /api/v1/subscriptions
+        - uri:
+            prefix: /api/v1/orders
+      route:
+        - destination:
+            host: subscription-service
+            port:
+              number: 8082
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+
+    - match:
+        - uri:
+            prefix: /api/v1/menu
+        - uri:
+            prefix: /api/v1/admin
+      route:
+        - destination:
+            host: catalog-service
+            port:
+              number: 8083
+      retries:
+        attempts: 3
+        perTryTimeout: 2s
+
+    - match:
+        - uri:
+            exact: /health
+        - uri:
+            exact: /ready
+      route:
+        - destination:
+            host: catalog-service
+            port:
+              number: 8083
+
+    - route:
+        - destination:
+            host: catalog-service
+            port:
+              number: 8083
+      timeout: 30s

@@ -28,7 +28,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserResponse getMe(String token) {
         String userIdStr = tokenProvider.getUserIdFromToken(token);
-        UUID userId = UUID.fromString(userIdStr); // ✅ Теперь работает!
+        UUID userId = UUID.fromString(userIdStr);
 
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -61,7 +61,7 @@ public class UserService {
         String userId = tokenProvider.getUserIdFromToken(token);
         UserEntity user = userRepository.findById(UUID.fromString(userId))
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        user.setActive(false); // Soft delete
+        user.setActive(false);
 
         userRepository.save(user);
     }
@@ -79,7 +79,6 @@ public class UserService {
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
 
-        // Отзыв всех сессий при смене пароля
         sessionRepository.deleteByUserId(user.getId());
     }
 }

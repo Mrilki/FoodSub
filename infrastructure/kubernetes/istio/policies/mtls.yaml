@@ -1,0 +1,44 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: food-subscription
+spec:
+  mtls:
+    mode: STRICT
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: mtls-permissive
+  namespace: food-subscription
+spec:
+  selector:
+    matchLabels:
+      app: catalog-service
+  mtls:
+    mode: PERMISSIVE
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: require-jwt
+  namespace: food-subscription
+spec:
+  selector:
+    matchLabels:
+      app: catalog-service
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            namespaces: ["food-subscription"]
+      to:
+        - operation:
+            methods: ["GET"]
+    - from:
+        - source:
+            principals: ["cluster.local/ns/food-subscription/sa/auth-service"]
+      to:
+        - operation:
+            methods: ["POST", "PUT", "DELETE"]

@@ -31,11 +31,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = getJwtFromRequest(request);
 
         if (StringUtils.hasText(token) && tokenProvider.validateToken(token)) {
-            // ✅ Извлекаем UUID из токена
             String userIdStr = tokenProvider.getUserIdFromToken(token);
             UUID userId = UUID.fromString(userIdStr);
 
-            // ✅ Загружаем пользователя по ID, а не по email!
             UserDetails userDetails = userDetailsService.loadUserById(userId);
 
             UsernamePasswordAuthenticationToken authentication =

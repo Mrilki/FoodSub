@@ -1,0 +1,57 @@
+name: Kaniko Build (K8s)
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Service to build'
+        required: true
+        type: choice
+        options:
+          - auth-service
+          - subscription-service
+          - catalog-service
+
+jobs:
+  kaniko-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create Kubernetes Secret for Kaniko
+        run: |
+          kubectl create secret generic kaniko-secret \
+            --from-file=/kaniko/.docker/config.json=${{ secrets.DOCKER_CONFIG }} \
+            --namespace=ci-cd --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Run Kaniko Build
+        run: |
+          kubectl apply -f - <<EOF
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: kaniko-build-${{ github.event.inputs.service }}
+            namespace: ci-cd
+          spec:
+            template:
+              spec:
+                containers:
+                - name: kaniko
+                  image: gcr.io/kaniko-project/executor:latest
+                  args:
+                  - --context=git://github.com/${{ github.repository }}.git#refs/heads/${{ github.ref_name }}
+                  - --context-sub-path=services/${{ github.event.inputs.service }}
+                  - --destination=ghcr.io/${{ github.repository }}/${{ github.event.inputs.service }}:${{ github.sha }}
+                  - --destination=ghcr.io/${{ github.repository }}/${{ github.event.inputs.service }}:latest
+                  - --cache=true
+                  - --cache-repo=ghcr.io/${{ github.repository }}/cache
+                  volumeMounts:
+                  - name: kaniko-secret
+                    mountPath: /kaniko/.docker
+                    readOnly: true
+                volumes:
+                - name: kaniko-secret
+                  secret:
+                    secretName: kaniko-secret
+                restartPolicy: Never
+          EOF

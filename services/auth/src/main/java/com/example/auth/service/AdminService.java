@@ -51,7 +51,6 @@ public class AdminService {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Защита: нельзя снять роль с последнего админа (опционально)
         if (user.getRole().name().equals("ADMIN") && !request.getRole().name().equals("ADMIN")) {
             long adminCount = userRepository.countByRoleAndActiveTrue(com.example.auth.enums.UserRole.ADMIN);
             if (adminCount <= 1) {
@@ -63,7 +62,6 @@ public class AdminService {
         userRepository.save(user);
     }
 
-    // Маппинг Entity → DTO
     private AdminUserResponse mapToAdminResponse(UserEntity user) {
         UserProfileEntity profile = user.getProfile();
         AdminUserResponse.UserProfileDTO profileDTO = null;

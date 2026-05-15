@@ -1,0 +1,60 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: auth-service
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Mrilki/FoodSub
+    targetRevision: HEAD
+    path: infrastructure/helm/auth-service
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: food-subscription
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: subscription-service
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Mrilki/FoodSub
+    targetRevision: HEAD
+    path: infrastructure/helm/subscription-service
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: food-subscription
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: catalog-service
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Mrilki/FoodSub
+    targetRevision: HEAD
+    path: infrastructure/helm/catalog-service
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: food-subscription
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

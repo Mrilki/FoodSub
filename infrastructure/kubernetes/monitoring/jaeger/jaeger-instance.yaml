@@ -1,0 +1,58 @@
+apiVersion: jaegertracing.io/v1
+kind: Jaeger
+metadata:
+  name: food-subscription
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  strategy: production
+  collector:
+    replicas: 2
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 250m
+      limits:
+        memory: 1Gi
+        cpu: 500m
+    options:
+      log-level: info
+      kafka:
+        producer:
+          brokers:
+            - kafka.kafka.svc.cluster.local:9092
+          required-acks: 1
+          compression: gzip
+  query:
+    replicas: 2
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 100m
+      limits:
+        memory: 512Mi
+      cpu: 250m
+    options:
+      query.base-path: /jaeger
+  storage:
+    type: memory
+    options:
+      memory:
+        max-traces: 100000
+  sampling:
+    options:
+      default_strategy:
+        type: probabilistic
+        param: 0.1
+      service_strategies:
+        - service: catalog-service
+          type: probabilistic
+          param: 0.2
+        - service: auth-service
+          type: probabilistic
+          param: 0.2
+  ingress:
+    enabled: true
+    hosts:
+      - jaeger.food-subscription.local
