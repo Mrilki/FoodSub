@@ -9,5 +9,8 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    kafka_bootstrap_servers: str = "localhost:9092"
+    kafka_group_id: str = "subscription-service"
+
 
 settings = Settings()
